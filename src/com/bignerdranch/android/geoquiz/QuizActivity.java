@@ -5,13 +5,15 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 public class QuizActivity extends Activity {
 	private Button mTrueButton;
 	private Button mFalseButton;
-	private Button mNextButton;
+	private ImageButton mNextButton;
+	private ImageButton mPrevButton;
 	private TextView mQuestionTextView;
 	
 	private TrueFalse[] mQuestionBank = new TrueFalse[] {					//Array of true/false questions
@@ -23,7 +25,7 @@ public class QuizActivity extends Activity {
 	};
 	
 	private int mCurrentIndex = 0;
-
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -48,7 +50,7 @@ public class QuizActivity extends Activity {
 			}
 		});
 		
-		mNextButton = (Button) findViewById(R.id.next_button);					//Next Button wired up
+		mNextButton = (ImageButton) findViewById(R.id.next_button);					//Next Button wired up
 		mNextButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -57,7 +59,24 @@ public class QuizActivity extends Activity {
 			}
 		});
 		
+		mPrevButton = (ImageButton) findViewById(R.id.prev_button);					//Prev button (ImageButton instead of Button)
+		mPrevButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				mCurrentIndex = (mCurrentIndex-1+mQuestionBank.length) % mQuestionBank.length;
+				updateQuestion();
+			}
+		});
+		
 		mQuestionTextView = (TextView) findViewById(R.id.question_text_view);	//Wired up to question_text_view
+		mQuestionTextView.setOnClickListener(new View.OnClickListener() {		
+			@Override
+			public void onClick(View v) {
+				mCurrentIndex = (mCurrentIndex+1) % mQuestionBank.length;
+				updateQuestion();
+			}
+		});
+		
 		updateQuestion();
 	}
 	
