@@ -1,7 +1,10 @@
 package com.bignerdranch.android.geoquiz;
 
+import android.annotation.TargetApi;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -18,9 +21,11 @@ public class QuizActivity extends Activity {								//Subclass of Activity class
 	private ImageButton mNextButton;
 	private ImageButton mPrevButton;
 	private TextView mQuestionTextView;
-	private static final String TAG = "QuizActivity";						//Tag value is the class name for easy identification
+	private static final String TAG = "QuizActivity";						//Tag value to the class name for easy identi for log
 	private static final String KEY_INDEX = "index";
+	private static final String CHEATER = "cheat";
 	private boolean mIsCheater;												//Hold the value CheatActivity is passing back
+	private boolean[] mCheatedQuestions = new boolean[5];
 	
 	private TrueFalse[] mQuestionBank = new TrueFalse[] {					//Array of true/false questions
 			new TrueFalse(R.string.question_oceans, true),
@@ -32,14 +37,21 @@ public class QuizActivity extends Activity {								//Subclass of Activity class
 	
 	private int mCurrentIndex = 0;
 	
+	@TargetApi(11)															//Suppress the compatibility warning
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {					//onCreate method of the activity subclasses
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate(Bundle) called");
 		setContentView(R.layout.activity_quiz);
 		
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {		//Check version before using the code
+			ActionBar actionBar = getActionBar();
+			actionBar.setSubtitle("WTF");	
+		}
+		
 		if (savedInstanceState != null) {									//Check for previous saved state
 			mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0);
+			mCheatedQuestions = savedInstanceState.getBooleanArray(CHEATER);
 		}
 		
 		mTrueButton = (Button) findViewById(R.id.true_button);
@@ -66,7 +78,7 @@ public class QuizActivity extends Activity {								//Subclass of Activity class
 			@Override
 			public void onClick(View v) {
 				mCurrentIndex = (mCurrentIndex+1) % mQuestionBank.length;		//Round about array
-				mIsCheater = false;
+				mIsCheater = mCheatedQuestions[mCurrentIndex];
 				updateQuestion();
 			}
 		});
@@ -143,7 +155,7 @@ public class QuizActivity extends Activity {								//Subclass of Activity class
 		boolean answerIsTrue = mQuestionBank[mCurrentIndex].isTrueQuestion();
 		
 		int messageReID = 0;
-		if (mIsCheater) {												//First check if the user has cheated
+		if (mCheatedQuestions[mCurrentIndex]) {												//First check if the user has cheated
 			messageReID = R.string.judgement_toast;
 		}
 		else if (userPressedTrue == answerIsTrue) {
@@ -166,8 +178,9 @@ public class QuizActivity extends Activity {								//Subclass of Activity class
 	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState) {		//Override to save additional data
 		super.onSaveInstanceState(savedInstanceState);					//Default: asks all activity's views to save their state as data in Bundle object
-		Log.i(TAG, "onSaveInstanceState");
+//		Log.i(TAG, "onSaveInstanceState");
 		savedInstanceState.putInt(KEY_INDEX, mCurrentIndex);			//Bundle is a structure like HashTable
+		savedInstanceState.putBooleanArray(CHEATER, mCheatedQuestions);
 	}
 
 	@Override
@@ -176,5 +189,6 @@ public class QuizActivity extends Activity {								//Subclass of Activity class
 			return;
 		}																			//Default is false
 		mIsCheater = data.getBooleanExtra(CheatActivity.EXTRA_ANSWER_SHOWN, true);	//Use the String key declared public in the child activity
+		mCheatedQuestions[mCurrentIndex] = mIsCheater;
 	}
 }
